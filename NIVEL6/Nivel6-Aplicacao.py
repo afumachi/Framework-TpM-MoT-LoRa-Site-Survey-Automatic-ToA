@@ -1,6 +1,13 @@
+
+
+import time
+import os
+import tkinter.messagebox as tkMessageBox
+import tkinter.ttk as ttk
+import tkinter.filedialog
+
 import tkinter
 from tkinter import *
-import tkinter.messagebox as tkMessageBox
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib import style
@@ -9,10 +16,55 @@ from matplotlib.figure import Figure
 import os
 import math
 
+
+# -------- ARQUIVO DE COMANDO DO LED AMARELO --------
+CMD_LED_FILE = "cmd_led_amarelo.txt"
+
+if not os.path.exists(CMD_LED_FILE):
+    with open(CMD_LED_FILE, "w") as f:
+        f.write("0")
+
+led_amarelo_estado = 0
+
+
+def ler_estado_led():
+    try:
+        with open(CMD_LED_FILE, "r") as f:
+            val = f.read().strip()
+            return int(val) if val in ("0", "1") else 0
+    except Exception:
+        return 0
+
+
+def escrever_estado_led(estado):
+    try:
+        with open(CMD_LED_FILE, "w") as f:
+            f.write(str(estado))
+    except Exception as e:
+        print(f"Erro ao escrever cmd_led_amarelo.txt: {e}")
+
+
+def toggle_led():
+    global led_amarelo_estado
+    led_amarelo_estado = 1 if led_amarelo_estado == 0 else 0
+    escrever_estado_led(led_amarelo_estado)
+    atualizar_botao_led()
+    print(f"[N6] LED Amarelo → {'ON' if led_amarelo_estado else 'OFF'}")
+
+
+def atualizar_botao_led():
+    if led_amarelo_estado == 1:
+        btn_led.config(text="LED AMARELO: ON",  bg="#FFD700", fg="#333333", activebackground="#FFC200")
+    else:
+        btn_led.config(text="LED AMARELO: OFF", bg="#555555", fg="#FFFFFF", activebackground="#444444")
+
+
+
+
 #----------------------------- CRIAÇÃO DA JANELA PRINCIPAL ---------------------
 janela_principal=Tk() 
 janela_principal.title("MONITORAMENTO DE APLICAÇÃO (LUMINOSIDADE)") 
-janela_principal.geometry('1000x820') 
+janela_principal.geometry('1300x820') 
 janela_principal.resizable(True, True) 
 #-------------------------------------------------------------------------------
 
@@ -51,9 +103,25 @@ lbl_atual_lum.place(x=150, y=150, anchor="center")
 
 #-------------------------------------------------------------------------------
 
+
+RLAM = Label(reg_dados, font=("Arial", 11, "bold"), text="COMANDO LED AMARELO", fg="black", padx=5, pady=5)
+RLAM.place(x=150, y=230, anchor="center") 
+
+
+led_amarelo_estado = ler_estado_led()
+#width=26,
+btn_led = Button(reg_dados, text="", font=("Arial", 12, "bold"),
+                 width=18, height=1, cursor="hand2", relief="raised", bd=3,
+                 command=toggle_led)
+btn_led.place(x=50, y=250)
+atualizar_botao_led()
+
+
+#-------------------------------------------------------------------------------
+
 #---------------------------- CRIAÇÃO DA REGIÃO DE GRÁFICO ---------------------
 reg_grafico = Frame(master=janela_principal,borderwidth=1, relief='sunken') 
-reg_grafico.place(x=320, y=10, width=670, height=790) 
+reg_grafico.place(x=320, y=10, width=870, height=790) #width=670, height=790)
 #-------------------------------------------------------------------------------
 
 #----------------------------- CRIAÇÃO DO GRÁFICO ----------------------
